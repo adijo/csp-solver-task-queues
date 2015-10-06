@@ -33,8 +33,6 @@ class CSPSolver(object):
             if a not in assigned and b not in assigned:
                 queue.append((a, b))
                 queue.append((b, a))
-        #print assigned, queue, variables
-        
         while queue:
             a, b = queue.popleft()
             # constraint is from a --> b
@@ -53,11 +51,7 @@ class CSPSolver(object):
             # remove all values that are not good.
             a_values = a_values - to_remove
             if len(a_values) == 0:
-                #print a, '-->', a_values
-                #print "-----------------------"
                 return False
-        #print "ok"
-        #print "----------------------------"
         return True
 
 
@@ -73,15 +67,10 @@ class CSPSolver(object):
                 
                 for possible_assignment in possible_assignments:
                     assigned[current] = possible_assignment
-                    #new_assignment = copy.deepcopy(possible_assignments) - set([possible_assignment])
-                    #assignment_graph[current] = new_assignment
-                    # current has been assigned possible_assignment temporarily.
                     new_assignment_graph = copy.deepcopy(assignment_graph)
                     for key in new_assignment_graph:
                         if (current, key) in graph or (key, current) in graph:
                             new_assignment_graph[key] = new_assignment_graph[key] - set([possible_assignment])
-                    #print new_assignment_graph
-                    #print assigned
                     consistent_possible = self.make_consistent(graph, new_assignment_graph, domains, variables, assigned)
                     if consistent_possible:
                         res = self.backtrack_search(variables, domains, graph, new_assignment_graph, assigned)
@@ -91,7 +80,6 @@ class CSPSolver(object):
                     del assigned[current]
 
                 variables.append(current)
-                #print "Can't assign value to ", current
                 return (False, None)
 
     def build_assignment_graph(self, variables, domains, unary):
