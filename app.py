@@ -37,6 +37,7 @@ def solver():
     # do the same for unary, ignore unary for now. keep dummy values for now.
     unary = {x : set() for x in variables}
     job_id = round(time.time(), 2)
+    print redis_result_prefix(job_id)
     REDIS.set(redis_result_prefix(job_id), "IN_PROGRESS")
     process.delay(new_graph, variables, domains, unary, job_id)
     return json.dumps({"status" : "ok", "job_id" : job_id})
@@ -46,15 +47,16 @@ def solver():
 def poll():
     request_ip = request.remote_addr
     key = redis_retry_prefix(request_ip)
-    times = int(REDIS.get(key))
-    if times == None:
-        REDIS.setex(key, 1, 600)
-    elif times > MAX_RETRIES:
+    times = REDIS.get(key)
+    if times != None and int(times) > MAX_RETRIES:
         return json.dumps({"error" : "true", "error_message" : "Exceeded retries. Please try again in 10 minutes."})
     else:
+        if times == None:
+            REDIS.setex(key, 0, 600)
         REDIS.incr(key)
         job_id = request.args.get("job_id")
         res_key = redis_result_prefix(job_id)
+        print res_key
         result = REDIS.get(res_key)
         if result == "IN_PROGRESS":
             return json.dumps({"error" : "false", "error_message" : None, "result" : "IN_PROGRESS"})
